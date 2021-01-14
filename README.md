@@ -5,8 +5,7 @@ This is a simple pytorch-lightning reimplementation of the 'Maximum Density Dive
 ## Maximum Density Divergence
 
 As stated in the paper abstract:
-"*Unsupervised domain adaptation addresses the problem of transferring knowledge from a well-labeled source domain to an unlabeled target domain where the two domains have distinctive data distributions. Thus, the essence of domain adaptation is to mitigate the distribution divergence between the two domains. The state-of-the-art methods practice this very idea by either conducting
-adversarial training or minimizing a metric which defines the distribution gaps. In this paper, we propose a new domain adaptation method named Adversarial Tight Match (ATM) which enjoys the benefits of both adversarial training and metric learning. Specifically, at first, we propose a novel distance loss, named Maximum Density Divergence (MDD), to quantify the distribution divergence. MDD minimizes the inter-domain divergence and maximizes the intra-class density. Then, to address the equilibrium challenge issue in  adversarial domain adaptation, we consider leveraging the proposed MDD into adversarial domain adaptation framework*".  
+"*Unsupervised domain adaptation addresses the problem of transferring knowledge from a well-labeled source domain to an unlabeled target domain where the two domains have distinctive data distributions. Thus, the essence of domain adaptation is to mitigate the distribution divergence between the two domains. The state-of-the-art methods practice this very idea by either conducting adversarial training or minimizing a metric which defines the distribution gaps. In this paper, we propose a new domain adaptation method named Adversarial Tight Match (ATM) which enjoys the benefits of both adversarial training and metric learning. Specifically, at first, we propose a novel distance loss, named Maximum Density Divergence (MDD), to quantify the distribution divergence. MDD minimizes the inter-domain divergence and maximizes the intra-class density. Then, to address the equilibrium challenge issue in  adversarial domain adaptation, we consider leveraging the proposed MDD into adversarial domain adaptation framework*".  
 
 The general framework is depicted in the following figure:
 
@@ -228,8 +227,8 @@ data arguments:
 where the `optional arguments` are the ones of the [Trainer](https://pytorch-lightning.readthedocs.io/en/latest/trainer.html#trainer-flags) class of [pytorch-lightning](https://pytorch-lightning.readthedocs.io/en/latest/).  
 By now, only the `office-31` and `image-clef` datasets are available, and one can train a model for example with:
 
-* `python main.py --gpus 1 --feature_ext resnet50 --dset office-31 --s_dset_path ./data/office/amazon_list.txt --t_dset_path ./data/office/webcam_list.txt --max_steps 10000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01` 
-* `python main.py --gpus "2,3" --feature_ext resnet50 --dset office-31 --s_dset_path ./data/image-clef/c.txt --t_dset_path ./data/image-clef/p.txt --max_steps 40000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32`
+* `python main.py --gpus 1 --feature_ext resnet50 --dset office-31 --s_dset_path ./data/office-31/amazon_list.txt --t_dset_path ./data/office-31/webcam_list.txt --max_steps 10000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32` 
+* `python main.py --gpus "2,3" --feature_ext resnet50 --dset image-clef --s_dset_path ./data/image-clef/c.txt --t_dset_path ./data/image-clef/p.txt --max_steps 40000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32`
 
 During training one can inspect the model behaviour with, for example, [Tensorboard](https://pytorch-lightning.readthedocs.io/en/latest/logging.html) with the following command:
 
