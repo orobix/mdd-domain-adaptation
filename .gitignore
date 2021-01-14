@@ -148,3 +148,6 @@ data/image-clef/b/
 data/image-clef/p/
 data/image-clef/i/
 data/image-clef/c/
+
+# vscode folder
+.vscode/
