@@ -234,6 +234,21 @@ During training one can inspect the model behaviour with, for example, [Tensorbo
 
 * `tensorboard --logdir ./chkpts/`
 
+# Performances
+
+We are trying to reproduce the reference paper performaces, we'll update here our best results. 
+
+## Office-31
+
+| Model | A &rarr; W |
+| --- | --- | --- | --- | --- |
+| Paper | 95.7% |
+| This repo | 95.3%<sup>1</sup> |
+
+Achieved with:
+
+1. `python main.py --gpus "1,2" --feature_ext resnet50 --dset office-31 --s_dset_path ./data/office-31/amazon_list.txt --t_dset_path ./data/office-31/webcam_list.txt --max_steps 10000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32 --benchmark True --accelerator ddp --test_10crop True` 
+
 # Citations
 
 Cite the paper as follows (copied-pasted it from arxiv for you):  

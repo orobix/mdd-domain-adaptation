@@ -1,5 +1,8 @@
 import albumentations as A
+from albumentations.pytorch.transforms import ToTensor
+import torch
 from albumentations.pytorch import ToTensorV2
+from torchvision import transforms as T
 
 
 def train(resize_size=256, crop_size=224):
@@ -27,5 +30,17 @@ def test(resize_size=256, crop_size=224):
             ),
             A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ToTensorV2(),
+        ]
+    )
+
+
+def test_10crop(resize_size=256, crop_size=224):
+    return T.Compose(
+        [
+            T.ToTensor(),
+            T.Resize((resize_size, resize_size)),
+            T.TenCrop((crop_size, crop_size)),
+            T.Lambda(lambda crops: torch.stack([crop for crop in crops])),
+            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )

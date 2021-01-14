@@ -34,6 +34,7 @@ class MDDLitModel(pl.LightningModule):
         scheduler_power=0.75,
         scheduler_weight_decay=0.0005,
         max_iter=10000,
+        test_10crop=True,
     ):
         super(MDDLitModel, self).__init__()
         self.save_hyperparameters()
@@ -77,6 +78,7 @@ class MDDLitModel(pl.LightningModule):
         self.scheduler_power = scheduler_power
         self.scheduler_weight_decay = scheduler_weight_decay
         self.max_iter = max_iter
+        self.test_10crop = test_10crop
 
         self.lr = lr
         self.momentum = momentum
@@ -181,7 +183,17 @@ class MDDLitModel(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         inputs, labels = batch
-        _, outputs = self.feature_ext(inputs)
+        if self.test_10crop:
+            bs, ncrops, c, h, w = inputs.size()
+            _, outputs = self.feature_ext(inputs.view(-1, c, h, w))
+            labels = (
+                labels.view(-1, 1)
+                .expand(-1, ncrops)
+                .contiguous()
+                .view(ncrops * bs)
+            )
+        else:
+            _, outputs = self.feature_ext(inputs)
         self.log(
             "test_acc",
             self.accuracy(outputs.argmax(1), labels),

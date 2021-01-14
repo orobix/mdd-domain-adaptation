@@ -15,6 +15,7 @@ class ImageList(Dataset):
         transform=None,
         target_transform=None,
         mode="RGB",
+        test_10crop=True,
     ):
         image_list = open(path).readlines()
         imgs = make_dataset(image_list)
@@ -24,6 +25,7 @@ class ImageList(Dataset):
         self.imgs = imgs
         self.transform = transform
         self.target_transform = target_transform
+        self.test_10crop = test_10crop
         if mode == "RGB":
             self.cvt = cv2.COLOR_BGR2RGB
         elif mode == "L":
@@ -34,8 +36,11 @@ class ImageList(Dataset):
         img = cv2.imread(path)
         img = cv2.cvtColor(img, self.cvt)
         if self.transform is not None:
-            augmented = self.transform(image=img)
-            img = augmented["image"]
+            if self.test_10crop:
+                img = self.transform(img)
+            else:
+                augmented = self.transform(image=img)
+                img = augmented["image"]
         if self.target_transform is not None:
             target = self.target_transform(target)
         return img, target

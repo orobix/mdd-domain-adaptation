@@ -13,16 +13,22 @@ def train(config):
     prep_dict = {}
     prep_dict["source"] = t.train(**config["prep"])
     prep_dict["target"] = t.train(**config["prep"])
-    prep_dict["test"] = t.test(**config["prep"])
+    prep_dict["test"] = (
+        t.test_10crop(**config["prep"])
+        if config["data"]["test_10crop"]
+        else t.test(**config["prep"])
+    )
 
     # Data
     train_source_data = ImageList(
         config["data"]["s_dset_path"],
         transform=prep_dict["source"],
+        test_10crop=False,
     )
     train_target_data = ImageList(
         config["data"]["t_dset_path"],
         transform=prep_dict["target"],
+        test_10crop=False,
     )
 
     max_data_length = max(len(train_source_data), len(train_target_data))
@@ -62,6 +68,7 @@ def train(config):
     test_target_data = ImageList(
         config["data"]["t_dset_path"],
         transform=prep_dict["test"],
+        test_10crop=config["data"]["test_10crop"],
     )
     test_dataloader = DataLoader(
         test_target_data,
@@ -72,7 +79,9 @@ def train(config):
     )
 
     # MDD model
-    model = MDDLitModel(**config["model"])
+    model = MDDLitModel(
+        **config["model"], test_10crop=config["data"]["test_10crop"]
+    )
 
     # Trainer
     trainer = Trainer(**config["trainer"])
@@ -118,6 +127,12 @@ if __name__ == "__main__":
         type=int,
         default=4,
         help="Testing batch size",
+    )
+    data_args.add_argument(
+        "--test_10crop",
+        type=bool,
+        default=True,
+        help="Testing with random 10 crop",
     )
     # misc_args = parser.add_argument_group("misc arguments")
     # misc_args.add_argument(
