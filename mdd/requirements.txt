@@ -1,0 +1,8 @@
+opencv_python_headless
+pytorch_lightning
+torchvision
+albumentations
+requests
+numpy
+torch
+tqdm
