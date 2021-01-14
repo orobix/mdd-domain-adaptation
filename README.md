@@ -1,6 +1,6 @@
 # Maximum Density Divergence for Domain Adaptation (MDD)
 
-This is a pytorch-lightning implementation of 'Maximum Density Divergence for Domain Adaptation' paper, which can be read [here](https://arxiv.org/pdf/2004.12615.pdf). 
+This is a simple pytorch-lightning reimplementation of the 'Maximum Density Divergence for Domain Adaptation' paper, which can be read [here](https://arxiv.org/pdf/2004.12615.pdf), while the code has been adapted from [here](https://github.com/lijin118/ATM). 
 
 ## Maximum Density Divergence
 
