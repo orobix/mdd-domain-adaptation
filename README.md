@@ -265,15 +265,16 @@ We are trying to reproduce the reference paper performaces, we'll update here ou
 
 ## Office-31
 
-| Model | A &rarr; W | A &rarr; D |
-| --- | --- | --- |
-| Paper | 95.7% | 96.4% |
-| This repo | 95.3%<sup>1</sup> | 94.8%<sup>2</sup>|
+| Model | A &rarr; W | A &rarr; D | D &rarr; W |
+| --- | --- | --- | --- |
+| Paper | 95.7% | 96.4% | 99.3% |
+| This repo | 95.3%<sup>1</sup> | 94.8%<sup>2</sup> | 98.6%<sup>3</sup> |
 
 Achieved with:
 
 1. `python main.py --gpus "1,2" --feature_ext resnet50 --dset office-31 --s_dset_path ./data/office-31/amazon_list.txt --t_dset_path ./data/office-31/webcam_list.txt --max_steps 10000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32 --benchmark True --accelerator ddp --test_10crop True`
 2. `python main.py --gpus "2,3" --feature_ext resnet50 --dset office-31 --s_dset_path ./data/office-31/amazon_list.txt --t_dset_path ./data/office-31/dslr_list.txt --max_steps 15000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32 --benchmark True --accelerator ddp --test_10crop True`
+3. `python main.py --gpus "2,3" --feature_ext resnet50 --dset office-31 --s_dset_path ./data/office-31/dslr_list.txt --t_dset_path ./data/office-31/webcam_list.txt --max_steps 10000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32 --benchmark True --accelerator ddp --test_10crop True`
 
 # Citations
 
