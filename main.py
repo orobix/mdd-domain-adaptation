@@ -60,7 +60,7 @@ def train(config):
     train_dataloader = DataLoader(
         dataset,
         batch_size=config["data"]["train_batch_size"],
-        num_workers=5,
+        num_workers=config["data"]["num_workers"],
         drop_last=True,
         pin_memory=True,
         shuffle=True,
@@ -77,7 +77,7 @@ def train(config):
         batch_size=config["data"]["test_batch_size"],
         shuffle=False,
         pin_memory=True,
-        num_workers=5,
+        num_workers=config["data"]["num_workers"],
     )
 
     # MDD model
@@ -86,15 +86,16 @@ def train(config):
     )
 
     # Model checkpoint every n steps
-    model_checkpoint = ModelCheckpoint(
+    checkpoint = ModelCheckpoint(
         monitor="val_acc_epoch",
         save_top_k=1,
         mode="max",
         filename=config["data"]["dset"] + "-{step:d}-{val_acc_epoch:.3f}",
     )
+    callbacks = [checkpoint]
 
     # Trainer
-    trainer = Trainer(**config["trainer"], callbacks=[model_checkpoint])
+    trainer = Trainer(**config["trainer"], callbacks=callbacks)
     trainer.fit(
         model,
         train_dataloader=train_dataloader,
@@ -126,6 +127,12 @@ if __name__ == "__main__":
         type=str,
         default="./data/office/webcam_list.txt",
         help="The target dataset path list",
+    )
+    data_args.add_argument(
+        "--num_workers",
+        type=int,
+        default=5,
+        help="Pytorch DataLoader num workers",
     )
     data_args.add_argument(
         "--train_batch_size",
