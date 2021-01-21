@@ -83,7 +83,8 @@ class MDDLitModel(pl.LightningModule):
         self.lr = lr
         self.momentum = momentum
 
-        self.accuracy = pl.metrics.Accuracy()
+        self.test_accuracy = pl.metrics.Accuracy()
+        self.val_accuracy = pl.metrics.Accuracy()
 
     def forward(self, source, target):
         feat_source, out_source = self.feature_ext(source)
@@ -172,14 +173,29 @@ class MDDLitModel(pl.LightningModule):
             on_epoch=True,
             logger=True,
         )
+        return total_loss
+
+    def validation_step(self, batch, batch_idx):
+        inputs, labels = batch
+        if self.test_10crop:
+            bs, ncrops, c, h, w = inputs.size()
+            _, outputs = self.feature_ext(inputs.view(-1, c, h, w))
+            labels = (
+                labels.view(-1, 1)
+                .expand(-1, ncrops)
+                .contiguous()
+                .view(ncrops * bs)
+            )
+        else:
+            _, outputs = self.feature_ext(inputs)
         self.log(
-            "train_acc",
-            self.accuracy(out_source.argmax(1), labels_source),
+            "val_acc",
+            self.val_accuracy(outputs.argmax(1), labels),
             on_step=True,
             on_epoch=True,
             logger=True,
+            prog_bar=True,
         )
-        return total_loss
 
     def test_step(self, batch, batch_idx):
         inputs, labels = batch
@@ -196,11 +212,10 @@ class MDDLitModel(pl.LightningModule):
             _, outputs = self.feature_ext(inputs)
         self.log(
             "test_acc",
-            self.accuracy(outputs.argmax(1), labels),
+            self.test_accuracy(outputs.argmax(1), labels),
             on_step=True,
             on_epoch=True,
             logger=True,
-            prog_bar=True,
         )
 
     def optimizer_step(
@@ -257,8 +272,8 @@ class MDDLitModel(pl.LightningModule):
         )
         model_args.add_argument(
             "--use_bottleneck",
-            type=bool,
-            default=True,
+            action="store_true",
+            default=False,
             help="whether to use bottleneck in the classifier",
         )
         model_args.add_argument(
@@ -269,13 +284,13 @@ class MDDLitModel(pl.LightningModule):
         )
         model_args.add_argument(
             "--new_classifier",
-            type=bool,
-            default=True,
+            action="store_true",
+            default=False,
             help="whether to train a new classifier",
         )
         model_args.add_argument(
             "--random_proj",
-            type=bool,
+            action="store_true",
             default=False,
             help="whether use random projection",
         )
@@ -482,20 +497,14 @@ class AdversarialNetwork(nn.Module):
         if entropy is not None:
             entropy = GradientReverseLayer.apply(entropy, coeff)
             entropy = 1.0 + torch.exp(-entropy)
-            # source_weight = torch.zeros_like(entropy)
-            # source_weight[: feature.size(0) // 2] = entropy[
-            #     : feature.size(0) // 2
-            # ]
-            # target_weight = torch.zeros_like(entropy)
-            # target_weight[feature.size(0) // 2 :] = entropy[
-            #     feature.size(0) // 2 :
-            # ]
-            source_mask = torch.ones_like(entropy)
-            source_mask[feature.size(0) // 2 :] = 0
-            source_weight = entropy * source_mask
-            target_mask = torch.ones_like(entropy)
-            target_mask[0 : feature.size(0) // 2] = 0
-            target_weight = entropy * target_mask
+            source_weight = torch.zeros_like(entropy)
+            source_weight[: feature.size(0) // 2] = entropy[
+                : feature.size(0) // 2
+            ]
+            target_weight = torch.zeros_like(entropy)
+            target_weight[feature.size(0) // 2 :] = entropy[
+                feature.size(0) // 2 :
+            ]
             weight = (
                 source_weight / torch.sum(source_weight).detach()
                 + target_weight / torch.sum(target_weight).detach()

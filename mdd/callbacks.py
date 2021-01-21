@@ -11,7 +11,7 @@ class CheckpointEveryNSteps(pl.Callback):
     def __init__(
         self,
         save_step_frequency,
-        prefix="N-Step-Checkpoint",
+        prefix="model",
         use_modelcheckpoint_filename=True,
     ):
         """
@@ -31,7 +31,10 @@ class CheckpointEveryNSteps(pl.Callback):
         epoch = trainer.current_epoch
         global_step = trainer.global_step
         if global_step % self.save_step_frequency == 0:
-            if self.use_modelcheckpoint_filename:
+            if (
+                self.use_modelcheckpoint_filename
+                and trainer.checkpoint_callback is not None
+            ):
                 filename = trainer.checkpoint_callback.filename
             else:
                 filename = f"{self.prefix}_{epoch=}_{global_step=}.ckpt"

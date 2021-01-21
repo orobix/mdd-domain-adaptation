@@ -1,6 +1,8 @@
 import argparse
 
 from pytorch_lightning import Trainer
+from pytorch_lightning import callbacks
+from pytorch_lightning.callbacks import ModelCheckpoint, model_checkpoint
 from torch.utils.data import DataLoader
 
 import mdd.transforms as t
@@ -83,11 +85,20 @@ def train(config):
         **config["model"], test_10crop=config["data"]["test_10crop"]
     )
 
+    # Model checkpoint every n steps
+    model_checkpoint = ModelCheckpoint(
+        monitor="val_acc_epoch",
+        save_top_k=1,
+        mode="max",
+        filename=config["data"]["dset"] + "-{step:d}-{val_acc_epoch:.3f}",
+    )
+
     # Trainer
-    trainer = Trainer(**config["trainer"])
+    trainer = Trainer(**config["trainer"], callbacks=[model_checkpoint])
     trainer.fit(
         model,
         train_dataloader=train_dataloader,
+        val_dataloaders=test_dataloader,
     )
     trainer.test(model, test_dataloaders=test_dataloader)
 
@@ -130,8 +141,8 @@ if __name__ == "__main__":
     )
     data_args.add_argument(
         "--test_10crop",
-        type=bool,
-        default=True,
+        action="store_true",
+        default=False,
         help="Testing with random 10 crop",
     )
     # misc_args = parser.add_argument_group("misc arguments")
