@@ -4,7 +4,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 
-import mdd.transforms as t
+import mdd.transforms.defaults as t
 from mdd.data.dataset import CyclicDataset
 from mdd.data.domain_adaptation import ImageClef, Office31, OfficeHome
 from mdd.models import MDDLitModel
