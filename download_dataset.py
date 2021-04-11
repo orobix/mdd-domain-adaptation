@@ -5,7 +5,9 @@ from mdd.utils.download import datasets, download_with_resume
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--dataset", default="office-31", choices=["office-31", "image-clef"]
+        "--dataset",
+        default="office-31",
+        choices=["office-31", "image-clef", "office-home"],
     )
     args = parser.parse_args()
     if args.dataset not in datasets.keys():
