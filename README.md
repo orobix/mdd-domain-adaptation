@@ -13,10 +13,11 @@ The general framework is depicted in the following figure:
 
 # Download datasets
 
-Before training, one can automatically download [Office-31](https://people.eecs.berkeley.edu/~jhoffman/domainadapt/#datasets_code) and [Image-clef](https://www.imageclef.org/2014/adaptation) datasets with the following commands:
+Before training, one can automatically download [Office-31](https://people.eecs.berkeley.edu/~jhoffman/domainadapt/#datasets_code), [Image-clef](https://www.imageclef.org/2014/adaptation) and [Office-Home](https://www.hemanthdv.org/officeHomeDataset.html) datasets with the following commands:
 
-* `python download_dataset.py --dataset office-31`
 * `python download_dataset.py --dataset image-clef`
+* `python download_dataset.py --dataset office-31`
+* `python download_dataset.py --dataset office-home`
 
 Soon will be availble other datasets, such as MNIST, SVHN and so on.
 
@@ -101,9 +102,9 @@ We are trying to reproduce the reference paper performaces, we'll update here ou
 
 ## Office-31
 
-| Model | A &rarr; W | A &rarr; D | D &rarr; W | D &rarr; A |
-| --- | --- | --- | --- | --- |
-| Paper | 95.7% | 96.4% | 99.3% | 74.1% |
+| Model     | A &rarr; W        | A &rarr; D        | D &rarr; W        | D &rarr; A        |
+| --------- | ----------------- | ----------------- | ----------------- | ----------------- |
+| Paper     | 95.7%             | 96.4%             | 99.3%             | 74.1%             |
 | This repo | 95.3%<sup>1</sup> | 94.8%<sup>2</sup> | 98.6%<sup>3</sup> | 73.4%<sup>4</sup> |
 
 Achieved with:
