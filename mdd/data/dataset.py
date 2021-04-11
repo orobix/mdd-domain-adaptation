@@ -76,7 +76,6 @@ class ImageListDataset(data.Dataset):
 
     def __getitem__(self, idx):
         path, target = self.samples[idx]
-        print(path)
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if self.transform is not None:
@@ -90,7 +89,7 @@ class ImageListDataset(data.Dataset):
         return img, target
 
     def __len__(self):
-        return len(self.imgs)
+        return len(self.samples)
 
     @staticmethod
     def make_dataset(root_dir: str, images_list: List[str]) -> List[Tuple[str, int]]:
@@ -208,11 +207,20 @@ class ImageFolderDataset(data.Dataset):
 
 
 class CyclicDataset(data.Dataset):
-    def __init__(self, *datasets, num_iterations=10000):
+    def __init__(self, *datasets: data.Dataset, num_iterations: Optional[int] = 10000):
         self.datasets = datasets
         self.num_iter = num_iterations
 
-    def __getitem__(self, i):
+    def __getitem__(self, i) -> Tuple[Tuple[Any, Any], ...]:
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: ((image_1, target_1), (image_2, target_2), ..., (image_N, target_N))
+                where target_i is the class_index of the target class and N is
+                the number of datasets passed as arguments to the ``__init__``
+                function.
+        """
         result = []
         for dataset in self.datasets:
             cycled_i = i % len(dataset)
