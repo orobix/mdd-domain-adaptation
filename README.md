@@ -114,6 +114,17 @@ Achieved with:
 3. `python main.py --gpus "1,2" --feature_ext resnet50 --dset office-31 --source_domain dslr --target_domain webcam --max_steps 10000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32 --benchmark --accelerator ddp --test_10crop True --new_classifier --use_bottleneck`
 4. `python main.py --gpus "1,2" --feature_ext resnet50 --dset office-31 --source_domain dslr --target_domain amazon --max_steps 10000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32 --benchmark --accelerator ddp --test_10crop True --new_classifier --use_bottleneck`
 
+## Image-Clef
+
+| Model     | C &rarr; I        |
+| --------- | ----------------- |
+| Paper     | 93.5%             |
+| This repo | 93.1%<sup>1</sup> |
+
+Achieved with:
+
+1. `python main.py --gpus "2,3" --feature_ext resnet50 --dset image-clef --source_domain c --target_domain i --max_steps 15000 --max_epochs 1 --default_root_dir ./chkpts --mdd_weight 0.01 --lr 0.01 --train_batch_size 32 --benchmark --accelerator ddp --test_10crop --new_classifier --use_bottleneck`
+
 # Citations
 
 Cite the paper as follows (copied-pasted it from arxiv for you):  
