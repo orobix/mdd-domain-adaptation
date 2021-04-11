@@ -98,9 +98,7 @@ class MDDLitModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         inputs_source, labels_source = batch[0]
         inputs_target, _ = batch[1]
-        out_source, labels_target, feat, softmax_out = self(
-            inputs_source, inputs_target
-        )
+        out_source, labels_target, feat, softmax_out = self(inputs_source, inputs_target)
         labels = torch.cat((labels_source, labels_target))
         h = entropy(softmax_out)
 
@@ -180,12 +178,7 @@ class MDDLitModel(pl.LightningModule):
         if self.test_10crop:
             bs, ncrops, c, h, w = inputs.size()
             _, outputs = self.feature_ext(inputs.view(-1, c, h, w))
-            labels = (
-                labels.view(-1, 1)
-                .expand(-1, ncrops)
-                .contiguous()
-                .view(ncrops * bs)
-            )
+            labels = labels.view(-1, 1).expand(-1, ncrops).contiguous().view(ncrops * bs)
         else:
             _, outputs = self.feature_ext(inputs)
         self.log(
@@ -202,12 +195,7 @@ class MDDLitModel(pl.LightningModule):
         if self.test_10crop:
             bs, ncrops, c, h, w = inputs.size()
             _, outputs = self.feature_ext(inputs.view(-1, c, h, w))
-            labels = (
-                labels.view(-1, 1)
-                .expand(-1, ncrops)
-                .contiguous()
-                .view(ncrops * bs)
-            )
+            labels = labels.view(-1, 1).expand(-1, ncrops).contiguous().view(ncrops * bs)
         else:
             _, outputs = self.feature_ext(inputs)
         self.log(
@@ -241,9 +229,7 @@ class MDDLitModel(pl.LightningModule):
         optimizer.step(closure=closure)
 
     def configure_optimizers(self):
-        params_to_update = (
-            self.feature_ext.get_parameters() + self.adv.get_parameters()
-        )
+        params_to_update = self.feature_ext.get_parameters() + self.adv.get_parameters()
         optimizer = optim.SGD(
             params_to_update,
             lr=self.lr,
@@ -300,9 +286,7 @@ class MDDLitModel(pl.LightningModule):
             default=1024,
             help="random projection dimension",
         )
-        model_args.add_argument(
-            "--lr", type=float, default=0.1, help="learning rate"
-        )
+        model_args.add_argument("--lr", type=float, default=0.1, help="learning rate")
         model_args.add_argument(
             "--momentum",
             type=float,
@@ -382,9 +366,7 @@ class ResNetFc(nn.Module):
         self.new_classifier = new_classifier
         if new_classifier:
             if self.use_bottleneck:
-                self.bottleneck = nn.Linear(
-                    model_resnet.fc.in_features, bottleneck_dim
-                )
+                self.bottleneck = nn.Linear(model_resnet.fc.in_features, bottleneck_dim)
                 self.fc = nn.Linear(bottleneck_dim, num_class)
                 self.bottleneck.apply(init_weights)
                 self.fc.apply(init_weights)
@@ -449,9 +431,7 @@ class ResNetFc(nn.Module):
 
 
 class AdversarialNetwork(nn.Module):
-    def __init__(
-        self, in_feature, hidden_size, random_layer=None, max_iter=10000
-    ):
+    def __init__(self, in_feature, hidden_size, random_layer=None, max_iter=10000):
         super(AdversarialNetwork, self).__init__()
         self.ad_layer1 = nn.Linear(in_feature, hidden_size)
         self.ad_layer2 = nn.Linear(hidden_size, hidden_size)
@@ -481,12 +461,8 @@ class AdversarialNetwork(nn.Module):
     def cdan(self, feature, softmax_out, entropy=None, coeff=None):
         softmax_output = softmax_out.detach()
         if self.random_layer is None:
-            op_out = torch.bmm(
-                softmax_output.unsqueeze(2), feature.unsqueeze(1)
-            )
-            ad_out = self(
-                op_out.view(-1, softmax_output.size(1) * feature.size(1))
-            )
+            op_out = torch.bmm(softmax_output.unsqueeze(2), feature.unsqueeze(1))
+            ad_out = self(op_out.view(-1, softmax_output.size(1) * feature.size(1)))
         else:
             random_out = self.random_layer(feature, softmax_output)
             ad_out = self(random_out.view(-1, random_out.size(1)))
@@ -498,22 +474,15 @@ class AdversarialNetwork(nn.Module):
             entropy = GradientReverseLayer.apply(entropy, coeff)
             entropy = 1.0 + torch.exp(-entropy)
             source_weight = torch.zeros_like(entropy)
-            source_weight[: feature.size(0) // 2] = entropy[
-                : feature.size(0) // 2
-            ]
+            source_weight[: feature.size(0) // 2] = entropy[: feature.size(0) // 2]
             target_weight = torch.zeros_like(entropy)
-            target_weight[feature.size(0) // 2 :] = entropy[
-                feature.size(0) // 2 :
-            ]
+            target_weight[feature.size(0) // 2 :] = entropy[feature.size(0) // 2 :]
             weight = (
                 source_weight / torch.sum(source_weight).detach()
                 + target_weight / torch.sum(target_weight).detach()
             )
             return (
-                torch.sum(
-                    weight.view(-1, 1)
-                    * F.binary_cross_entropy(ad_out, dc_target)
-                )
+                torch.sum(weight.view(-1, 1) * F.binary_cross_entropy(ad_out, dc_target))
                 / torch.sum(weight).detach()
             )
         else:

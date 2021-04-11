@@ -141,13 +141,7 @@ cython_debug/
 chkpts/
 
 # images
-data/office-31/amazon
-data/office-31/dslr
-data/office-31/webcam
-data/image-clef/b/
-data/image-clef/p/
-data/image-clef/i/
-data/image-clef/c/
+datasets/
 
 # vscode folder
 .vscode/

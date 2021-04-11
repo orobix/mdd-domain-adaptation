@@ -1,12 +1,12 @@
 import argparse
 
 from pytorch_lightning import Trainer
-from pytorch_lightning import callbacks
-from pytorch_lightning.callbacks import ModelCheckpoint, model_checkpoint
+from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 
 import mdd.transforms as t
-from mdd.data import CyclicDataset, ImageList
+from mdd.data.dataset import CyclicDataset
+from mdd.data.domain_adaptation import ImageClef, Office31, OfficeHome
 from mdd.models import MDDLitModel
 
 
@@ -22,16 +22,54 @@ def train(config):
     )
 
     # Data
-    train_source_data = ImageList(
-        config["data"]["s_dset_path"],
-        transform=prep_dict["source"],
-        test_10crop=False,
-    )
-    train_target_data = ImageList(
-        config["data"]["t_dset_path"],
-        transform=prep_dict["target"],
-        test_10crop=False,
-    )
+    if config["data"]["dset"] == "image-clef":
+        train_source_data = ImageClef(
+            domain=config["data"]["source_domain"],
+            transform=prep_dict["source"],
+            test_10crop=False,
+        )
+        train_target_data = ImageClef(
+            domain=config["data"]["target_domain"],
+            transform=prep_dict["target"],
+            test_10crop=False,
+        )
+        test_target_data = ImageClef(
+            domain=config["data"]["target_domain"],
+            transform=prep_dict["test"],
+            test_10crop=config["data"]["test_10crop"],
+        )
+    elif config["data"]["dset"] == "office-31":
+        train_source_data = Office31(
+            domain=config["data"]["source_domain"],
+            transform=prep_dict["source"],
+            test_10crop=False,
+        )
+        train_target_data = Office31(
+            domain=config["data"]["target_domain"],
+            transform=prep_dict["target"],
+            test_10crop=False,
+        )
+        test_target_data = Office31(
+            domain=config["data"]["target_domain"],
+            transform=prep_dict["test"],
+            test_10crop=config["data"]["test_10crop"],
+        )
+    elif config["data"]["dset"] == "office-home":
+        train_source_data = OfficeHome(
+            domain=config["data"]["source_domain"],
+            transform=prep_dict["source"],
+            test_10crop=False,
+        )
+        train_target_data = OfficeHome(
+            domain=config["data"]["target_domain"],
+            transform=prep_dict["target"],
+            test_10crop=False,
+        )
+        test_target_data = OfficeHome(
+            domain=config["data"]["target_domain"],
+            transform=prep_dict["test"],
+            test_10crop=config["data"]["test_10crop"],
+        )
 
     max_data_length = max(len(train_source_data), len(train_target_data))
     if (
@@ -40,17 +78,13 @@ def train(config):
     ):
         print(
             "The number of sampled images ("
-            + str(
-                config["trainer"]["max_steps"]
-                * config["data"]["train_batch_size"]
-            )
+            + str(config["trainer"]["max_steps"] * config["data"]["train_batch_size"])
             + ") is less than the available data ("
             + str(max_data_length)
             + ")"
         )
         exit()
 
-    # Train data
     dataset = CyclicDataset(
         train_source_data,
         train_target_data,
@@ -65,13 +99,6 @@ def train(config):
         pin_memory=True,
         shuffle=True,
     )
-
-    # Test data
-    test_target_data = ImageList(
-        config["data"]["t_dset_path"],
-        transform=prep_dict["test"],
-        test_10crop=config["data"]["test_10crop"],
-    )
     test_dataloader = DataLoader(
         test_target_data,
         batch_size=config["data"]["test_batch_size"],
@@ -81,9 +108,7 @@ def train(config):
     )
 
     # MDD model
-    model = MDDLitModel(
-        **config["model"], test_10crop=config["data"]["test_10crop"]
-    )
+    model = MDDLitModel(**config["model"], test_10crop=config["data"]["test_10crop"])
 
     # Model checkpoint every n steps
     checkpoint = ModelCheckpoint(
@@ -92,10 +117,10 @@ def train(config):
         mode="max",
         filename=config["data"]["dset"] + "-{step:d}-{val_acc_epoch:.3f}",
     )
-    callbacks = [checkpoint]
+    callbacks_pl = [checkpoint]
 
     # Trainer
-    trainer = Trainer(**config["trainer"], callbacks=callbacks)
+    trainer = Trainer(**config["trainer"], callbacks=callbacks_pl)
     trainer.fit(
         model,
         train_dataloader=train_dataloader,
@@ -113,20 +138,20 @@ if __name__ == "__main__":
         "--dset",
         type=str,
         default="office-31",
-        choices=["office-31", "image-clef"],
+        choices=["office-31", "image-clef", "office-home"],
         help="The dataset or source dataset type",
     )
     data_args.add_argument(
-        "--s_dset_path",
+        "--source_domain",
         type=str,
-        default="./data/office/amazon_list.txt",
-        help="The source dataset path list",
+        default="amazon",
+        help="The source domain",
     )
     data_args.add_argument(
-        "--t_dset_path",
+        "--target_domain",
         type=str,
-        default="./data/office/webcam_list.txt",
-        help="The target dataset path list",
+        default="webcam",
+        help="The target domain",
     )
     data_args.add_argument(
         "--num_workers",
@@ -179,20 +204,16 @@ if __name__ == "__main__":
 
     if config["data"]["dset"] == "office-31":
         if (
-            ("amazon" in args.s_dset_path and "webcam" in args.t_dset_path)
-            or ("webcam" in args.s_dset_path and "dslr" in args.t_dset_path)
-            or ("webcam" in args.s_dset_path and "amazon" in args.t_dset_path)
-            or ("dslr" in args.s_dset_path and "amazon" in args.t_dset_path)
+            ("amazon" in args.source_domain and "webcam" in args.target_domain)
+            or ("webcam" in args.source_domain and "dslr" in args.target_domain)
+            or ("webcam" in args.source_domain and "amazon" in args.target_domain)
+            or ("dslr" in args.source_domain and "amazon" in args.target_domain)
         ):
-            config["model"][
-                "scheduler_lr"
-            ] = 0.001  # optimal parameters 0.001 default
-        elif ("amazon" in args.s_dset_path and "dslr" in args.t_dset_path) or (
-            "dslr" in args.s_dset_path and "webcam" in args.t_dset_path
+            config["model"]["scheduler_lr"] = 0.001  # optimal parameters 0.001 default
+        elif ("amazon" in args.source_domain and "dslr" in args.target_domain) or (
+            "dslr" in args.source_domain and "webcam" in args.target_domain
         ):
-            config["model"][
-                "scheduler_lr"
-            ] = 0.0003  # optimal parameters 0.0003 default
+            config["model"]["scheduler_lr"] = 0.0003  # optimal parameters 0.0003 default
         config["model"]["num_class"] = 31
     elif config["data"]["dset"] == "image-clef":
         config["model"]["scheduler_lr"] = 0.001  # optimal parameters
