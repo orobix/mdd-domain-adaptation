@@ -3,7 +3,6 @@ from typing import Callable, Optional
 
 from mdd import PROJECT_ROOT_DIR
 
-import torchvision
 from .dataset import ImageFolderDataset, ImageListDataset
 
 
